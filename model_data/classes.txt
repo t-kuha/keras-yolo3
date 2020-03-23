@@ -1,0 +1,6 @@
+Car
+Truck
+Pedestrian
+Bicycle
+Signal
+Signs
