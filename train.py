@@ -2,6 +2,8 @@
 Retrain the YOLO model for your own dataset.
 """
 
+import os
+
 import numpy as np
 import tensorflow as tf
 import tensorflow.keras.backend as K
@@ -13,12 +15,11 @@ from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint, ReduceLROnP
 from yolo3.model import preprocess_true_boxes, yolo_body, tiny_yolo_body, yolo_loss
 from yolo3.utils import get_random_data
 
-
 def _main():
-    annotation_path = 'model_data/dataset.txt'
-    log_dir = 'logs/000/'
-    classes_path = 'model_data/classes.txt'
-    anchors_path = 'model_data/tiny_yolo_anchors.txt'
+    annotation_path = os.path.join('model_data', 'dataset.txt')
+    log_dir = os.path.join('logs', '000')
+    classes_path = os.path.join('model_data', 'classes.txt')
+    anchors_path = os.path.join('model_data', 'tiny_yolo_anchors.txt')
     class_names = get_classes(classes_path)
     num_classes = len(class_names)
     anchors = get_anchors(anchors_path)
@@ -63,10 +64,11 @@ def _main():
                 steps_per_epoch=max(1, num_train//batch_size),
                 validation_data=data_generator_wrapper(lines[num_train:], batch_size, input_shape, anchors, num_classes),
                 validation_steps=max(1, num_val//batch_size),
-                epochs=50,
+                epochs=10,
                 initial_epoch=0,
                 callbacks=[logging, checkpoint])
-        model.save_weights(log_dir + 'trained_weights_stage_1.h5')
+        model.save_weights(os.path.join(log_dir, 'trained_weights_stage_1.h5'))
+        model.save(os.path.join(log_dir, 'stage_1.h5'))
 
     # Unfreeze and continue training, to fine-tune.
     # Train longer if the result is not good.
@@ -82,10 +84,11 @@ def _main():
             steps_per_epoch=max(1, num_train//batch_size),
             validation_data=data_generator_wrapper(lines[num_train:], batch_size, input_shape, anchors, num_classes),
             validation_steps=max(1, num_val//batch_size),
-            epochs=100,
-            initial_epoch=50,
+            epochs=50,
+            initial_epoch=10,
             callbacks=[logging, checkpoint, reduce_lr, early_stopping])
-        model.save_weights(log_dir + 'trained_weights_final.h5')
+        model.save_weights(os.path.join(log_dir, 'trained_weights_final.h5'))
+        model.save(os.path.join(log_dir, 'final.h5'))
 
     # Further training if needed.
 
