@@ -43,14 +43,15 @@ def get_random_data(annotation_line, input_shape, random=True, max_boxes=20, jit
 
     if not random:
         # resize image
-        scale = min(w/iw, h/ih)
-        nw = int(iw*scale)
-        nh = int(ih*scale)
-        dx = (w-nw)//2
-        dy = (h-nh)//2
+        scalex = w/iw
+        scaley = h/ih
+        nw = int(iw*scalex)
+        nh = int(ih*scaley)
+        dx = 0 # (w-nw)//2
+        dy = 0 # (h-nh)//2
         image_data=0
         if proc_img:
-            image = image.resize((nw,nh), Image.BICUBIC)
+            image = image.resize((nw,nh), Image.BILINEAR)
             new_image = Image.new('RGB', (w,h), (128,128,128))
             new_image.paste(image, (dx, dy))
             image_data = np.array(new_image)/255.
@@ -60,8 +61,8 @@ def get_random_data(annotation_line, input_shape, random=True, max_boxes=20, jit
         if len(box)>0:
             np.random.shuffle(box)
             if len(box)>max_boxes: box = box[:max_boxes]
-            box[:, [0,2]] = box[:, [0,2]]*scale + dx
-            box[:, [1,3]] = box[:, [1,3]]*scale + dy
+            box[:, [0,2]] = box[:, [0,2]]*scalex + dx
+            box[:, [1,3]] = box[:, [1,3]]*scaley + dy
             box_data[:len(box)] = box
 
         return image_data, box_data
